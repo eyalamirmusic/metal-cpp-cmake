@@ -10,7 +10,7 @@ FOREACH(project ${sample_projects})
 
         # Create executable and link target
         add_executable(${project-name} ${${project}-src})
-        target_link_libraries(${project-name} METAL_CPP)
+        target_link_libraries(${project-name} SharedCodeLib)
 
         message(STATUS "Adding ${project-name}")
     ENDIF()
