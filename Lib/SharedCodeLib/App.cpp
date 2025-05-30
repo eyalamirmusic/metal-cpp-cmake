@@ -1,5 +1,8 @@
 #include "App.h"
+#include "AutoReleasePool.h"
 
+namespace Apple
+{
 MyAppDelegate::~MyAppDelegate()
 {
     mtkView->release();
@@ -82,12 +85,13 @@ void MyAppDelegate::applicationDidFinishLaunching(NS::Notification* notification
                                        false);
 
     device = MTL::CreateSystemDefaultDevice();
+    renderer.setDevice(device);
 
     mtkView = MTK::View::alloc()->init(frame, device);
     mtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
     mtkView->setClearColor(MTL::ClearColor::Make(1.0, 0.0, 0.0, 1.0));
 
-    delegate = std::make_unique<MyMTKViewDelegate>(device);
+    delegate = std::make_unique<MyMTKViewDelegate>(renderer);
     mtkView->setDelegate(delegate.get());
 
     window->setContentView(mtkView);
@@ -105,3 +109,14 @@ bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed(
 {
     return true;
 }
+
+void startAppWith(Renderer& renderer)
+{
+    auto releasePool = Apple::AutoReleasePool();
+    auto del = Apple::MyAppDelegate(renderer);
+
+    auto* app = NS::Application::sharedApplication();
+    app->setDelegate(&del);
+    app->run();
+}
+} // namespace Apple

@@ -1,19 +1,9 @@
 #include "SharedCodeLib/App.h"
+#include "SharedCodeLib/AutoReleasePool.h"
 
-
-int main(int argc, char* argv[])
+int main()
 {
-    NS::AutoreleasePool* pAutoreleasePool = NS::AutoreleasePool::alloc()->init();
-
-    MyAppDelegate del;
-
-    NS::Application* pSharedApplication = NS::Application::sharedApplication();
-    pSharedApplication->setDelegate(&del);
-    pSharedApplication->run();
-
-    pAutoreleasePool->release();
+    Apple::startApp<Apple::Renderer>();
 
     return 0;
 }
-
-

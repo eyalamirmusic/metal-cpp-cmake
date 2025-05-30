@@ -1,15 +1,19 @@
 #pragma once
 
-
 #include "Renderer.h"
 
-class MyMTKViewDelegate : public MTK::ViewDelegate
+namespace Apple
 {
-public:
-    MyMTKViewDelegate(MTL::Device* device);
 
-    void drawInMTKView(MTK::View* view) override;
+struct MyMTKViewDelegate : MTK::ViewDelegate
+{
+    MyMTKViewDelegate(Renderer& rendererToUse)
+        : renderer(rendererToUse)
+    {
+    }
 
-private:
-    Renderer renderer;
+    void drawInMTKView(MTK::View* view) override { renderer.draw(view); }
+
+    Renderer& renderer;
 };
+} // namespace Apple

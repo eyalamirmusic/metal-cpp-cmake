@@ -2,14 +2,20 @@
 
 #include <MetalKit/MetalKit.hpp>
 
+namespace Apple
+{
+
 class Renderer
 {
 public:
-    Renderer(MTL::Device* pDevice);
-    ~Renderer();
-    void draw(const MTK::View* view) const;
+    virtual ~Renderer();
 
-private:
+    void setDevice(MTL::Device* deviceToUse);
+
+    virtual void draw(const MTK::View* view) const;
+
+protected:
     MTL::Device* device;
     MTL::CommandQueue* commandQueue;
 };
+} // namespace Apple
