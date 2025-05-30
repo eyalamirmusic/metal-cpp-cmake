@@ -2,6 +2,7 @@
 
 #include "ViewDelegate.h"
 #include "Renderer.h"
+#include "AutoReleasePool.h"
 
 namespace Apple
 {

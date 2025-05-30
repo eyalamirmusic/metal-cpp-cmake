@@ -12,7 +12,7 @@ struct MyMTKViewDelegate : MTK::ViewDelegate
     {
     }
 
-    void drawInMTKView(MTK::View* view) override { renderer.draw(view); }
+    void drawInMTKView(MTK::View* view) override { renderer.drawIn(view); }
 
     Renderer& renderer;
 };

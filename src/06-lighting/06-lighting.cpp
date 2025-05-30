@@ -63,7 +63,7 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::Library* _pShaderLibrary;
-        MTL::RenderPipelineState* _pPSO;
+        MTL::RenderPipelineState* pso;
         MTL::DepthStencilState* _pDepthStencilState;
         MTL::Buffer* _pVertexDataBuffer;
         MTL::Buffer* _pInstanceDataBuffer[kMaxFramesInFlight];
@@ -363,7 +363,7 @@ Renderer::~Renderer()
         _pCameraDataBuffer[i]->release();
     }
     _pIndexBuffer->release();
-    _pPSO->release();
+    pso->release();
     _pCommandQueue->release();
     _pDevice->release();
 }
@@ -476,8 +476,8 @@ void Renderer::buildShaders()
     pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
     pDesc->setDepthAttachmentPixelFormat( MTL::PixelFormat::PixelFormatDepth16Unorm );
 
-    _pPSO = _pDevice->newRenderPipelineState( pDesc, &pError );
-    if ( !_pPSO )
+    pso = _pDevice->newRenderPipelineState( pDesc, &pError );
+    if ( !pso )
     {
         __builtin_printf( "%s", pError->localizedDescription()->utf8String() );
         assert( false );
@@ -660,7 +660,7 @@ void Renderer::draw( MTK::View* pView )
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
-    pEnc->setRenderPipelineState( _pPSO );
+    pEnc->setRenderPipelineState( pso );
     pEnc->setDepthStencilState( _pDepthStencilState );
 
     pEnc->setVertexBuffer( _pVertexDataBuffer, /* offset */ 0, /* index */ 0 );

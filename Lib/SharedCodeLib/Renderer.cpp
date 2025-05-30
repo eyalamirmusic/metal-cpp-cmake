@@ -13,18 +13,19 @@ void Renderer::setDevice(MTL::Device* deviceToUse)
 {
     device = deviceToUse;
     commandQueue = device->newCommandQueue();
+    deviceChanged();
 }
 
-void Renderer::draw(const MTK::View* view) const
+void Renderer::drawIn(MTK::View* view)
 {
     auto pool = AutoReleasePool();
 
-    auto cmd = commandQueue->commandBuffer();
-    auto rpd = view->currentRenderPassDescriptor();
-    auto enc = cmd->renderCommandEncoder(rpd);
+    auto context = RenderContext(device, commandQueue, view);
+    draw(context);
+}
 
-    enc->endEncoding();
-    cmd->presentDrawable(view->currentDrawable());
-    cmd->commit();
+void Renderer::draw(RenderContext& context)
+{
+    context.endFrame();
 }
-}
+} // namespace Apple
