@@ -6,11 +6,10 @@
 class MyMTKViewDelegate : public MTK::ViewDelegate
 {
 public:
-    MyMTKViewDelegate(MTL::Device* pDevice);
+    MyMTKViewDelegate(MTL::Device* device);
 
-    ~MyMTKViewDelegate() override;
-    void drawInMTKView(MTK::View* pView) override;
+    void drawInMTKView(MTK::View* view) override;
 
 private:
-    Renderer* _pRenderer;
+    Renderer renderer;
 };

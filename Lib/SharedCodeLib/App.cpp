@@ -2,91 +2,106 @@
 
 MyAppDelegate::~MyAppDelegate()
 {
-    _pMtkView->release();
-    _pWindow->release();
-    _pDevice->release();
-    delete _pViewDelegate;
+    mtkView->release();
+    window->release();
+    device->release();
+}
+
+static void onQuit(void*, SEL, const NS::Object* pSender)
+{
+    auto app = NS::Application::sharedApplication();
+    app->terminate(pSender);
+}
+
+static void windowClose(void*, SEL, const NS::Object*)
+{
+    auto app = NS::Application::sharedApplication();
+    app->windows()->object<NS::Window>(0)->close();
 }
 
 NS::Menu* MyAppDelegate::createMenuBar()
 {
     using NS::StringEncoding::UTF8StringEncoding;
 
-    NS::Menu* pMainMenu = NS::Menu::alloc()->init();
-    NS::MenuItem* pAppMenuItem = NS::MenuItem::alloc()->init();
-    NS::Menu* pAppMenu = NS::Menu::alloc()->init( NS::String::string( "Appname", UTF8StringEncoding ) );
+    auto mainMenu = NS::Menu::alloc()->init();
+    auto appMenuItem = NS::MenuItem::alloc()->init();
+    auto appMenu =
+        NS::Menu::alloc()->init(NS::String::string("Appname", UTF8StringEncoding));
 
-    NS::String* appName = NS::RunningApplication::currentApplication()->localizedName();
-    NS::String* quitItemName = NS::String::string( "Quit ", UTF8StringEncoding )->stringByAppendingString( appName );
-    SEL quitCb = NS::MenuItem::registerActionCallback( "appQuit", [](void*,SEL,const NS::Object* pSender){
-        auto pApp = NS::Application::sharedApplication();
-        pApp->terminate( pSender );
-    } );
+    auto appName = NS::RunningApplication::currentApplication()->localizedName();
+    auto quitItemName = NS::String::string("Quit ", UTF8StringEncoding)
+                            ->stringByAppendingString(appName);
+    SEL quitCb = NS::MenuItem::registerActionCallback("appQuit", onQuit);
 
-    NS::MenuItem* pAppQuitItem = pAppMenu->addItem( quitItemName, quitCb, NS::String::string( "q", UTF8StringEncoding ) );
-    pAppQuitItem->setKeyEquivalentModifierMask( NS::EventModifierFlagCommand );
-    pAppMenuItem->setSubmenu( pAppMenu );
+    auto pAppQuitItem = appMenu->addItem(
+        quitItemName, quitCb, NS::String::string("q", UTF8StringEncoding));
+    pAppQuitItem->setKeyEquivalentModifierMask(NS::EventModifierFlagCommand);
+    appMenuItem->setSubmenu(appMenu);
 
-    NS::MenuItem* pWindowMenuItem = NS::MenuItem::alloc()->init();
-    NS::Menu* pWindowMenu = NS::Menu::alloc()->init( NS::String::string( "Window", UTF8StringEncoding ) );
+    auto windowMenuItem = NS::MenuItem::alloc()->init();
+    auto windowMenu =
+        NS::Menu::alloc()->init(NS::String::string("Window", UTF8StringEncoding));
 
-    SEL closeWindowCb = NS::MenuItem::registerActionCallback( "windowClose", [](void*, SEL, const NS::Object*){
-        auto pApp = NS::Application::sharedApplication();
-            pApp->windows()->object< NS::Window >(0)->close();
-    } );
-    NS::MenuItem* pCloseWindowItem = pWindowMenu->addItem( NS::String::string( "Close Window", UTF8StringEncoding ), closeWindowCb, NS::String::string( "w", UTF8StringEncoding ) );
-    pCloseWindowItem->setKeyEquivalentModifierMask( NS::EventModifierFlagCommand );
+    SEL closeWindowCb =
+        NS::MenuItem::registerActionCallback("windowClose", windowClose);
+    auto closeMenuItem =
+        windowMenu->addItem(NS::String::string("Close Window", UTF8StringEncoding),
+                            closeWindowCb,
+                            NS::String::string("w", UTF8StringEncoding));
+    closeMenuItem->setKeyEquivalentModifierMask(NS::EventModifierFlagCommand);
 
-    pWindowMenuItem->setSubmenu( pWindowMenu );
+    windowMenuItem->setSubmenu(windowMenu);
 
-    pMainMenu->addItem( pAppMenuItem );
-    pMainMenu->addItem( pWindowMenuItem );
+    mainMenu->addItem(appMenuItem);
+    mainMenu->addItem(windowMenuItem);
 
-    pAppMenuItem->release();
-    pWindowMenuItem->release();
-    pAppMenu->release();
-    pWindowMenu->release();
+    appMenuItem->release();
+    windowMenuItem->release();
+    appMenu->release();
+    windowMenu->release();
 
-    return pMainMenu->autorelease();
+    return mainMenu->autorelease();
 }
 
-void MyAppDelegate::applicationWillFinishLaunching( NS::Notification* pNotification )
+void MyAppDelegate::applicationWillFinishLaunching(NS::Notification* notification)
 {
-    NS::Menu* pMenu = createMenuBar();
-    NS::Application* pApp = reinterpret_cast< NS::Application* >( pNotification->object() );
-    pApp->setMainMenu( pMenu );
-    pApp->setActivationPolicy( NS::ActivationPolicy::ActivationPolicyRegular );
+    auto menu = createMenuBar();
+    auto app = reinterpret_cast<NS::Application*>(notification->object());
+    app->setMainMenu(menu);
+    app->setActivationPolicy(NS::ActivationPolicy::ActivationPolicyRegular);
 }
 
-void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotification )
+void MyAppDelegate::applicationDidFinishLaunching(NS::Notification* notification)
 {
-    CGRect frame = (CGRect){ {100.0, 100.0}, {512.0, 512.0} };
+    auto frame = (CGRect) {{100.0, 100.0}, {512.0, 512.0}};
 
-    _pWindow = NS::Window::alloc()->init(
-        frame,
-        NS::WindowStyleMaskClosable|NS::WindowStyleMaskTitled,
-        NS::BackingStoreBuffered,
-        false );
+    window = NS::Window::alloc()->init(frame,
+                                       NS::WindowStyleMaskClosable
+                                           | NS::WindowStyleMaskTitled,
+                                       NS::BackingStoreBuffered,
+                                       false);
 
-    _pDevice = MTL::CreateSystemDefaultDevice();
+    device = MTL::CreateSystemDefaultDevice();
 
-    _pMtkView = MTK::View::alloc()->init( frame, _pDevice );
-    _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
-    _pMtkView->setClearColor( MTL::ClearColor::Make( 1.0, 0.0, 0.0, 1.0 ) );
+    mtkView = MTK::View::alloc()->init(frame, device);
+    mtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
+    mtkView->setClearColor(MTL::ClearColor::Make(1.0, 0.0, 0.0, 1.0));
 
-    _pViewDelegate = new MyMTKViewDelegate( _pDevice );
-    _pMtkView->setDelegate( _pViewDelegate );
+    delegate = std::make_unique<MyMTKViewDelegate>(device);
+    mtkView->setDelegate(delegate.get());
 
-    _pWindow->setContentView( _pMtkView );
-    _pWindow->setTitle( NS::String::string( "00 - Window", NS::StringEncoding::UTF8StringEncoding ) );
+    window->setContentView(mtkView);
+    window->setTitle(
+        NS::String::string("00 - Window", NS::StringEncoding::UTF8StringEncoding));
 
-    _pWindow->makeKeyAndOrderFront( nullptr );
+    window->makeKeyAndOrderFront(nullptr);
 
-    NS::Application* pApp = reinterpret_cast< NS::Application* >( pNotification->object() );
-    pApp->activateIgnoringOtherApps( true );
+    auto app = reinterpret_cast<NS::Application*>(notification->object());
+    app->activateIgnoringOtherApps(true);
 }
 
-bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed( NS::Application* pSender )
+bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed(
+    NS::Application* sender)
 {
     return true;
 }

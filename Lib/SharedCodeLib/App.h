@@ -1,23 +1,23 @@
 #pragma once
 
-
-
 #include "ViewDelegate.h"
 
 class MyAppDelegate : public NS::ApplicationDelegate
 {
 public:
-    ~MyAppDelegate();
+    ~MyAppDelegate() override;
 
     NS::Menu* createMenuBar();
 
-    virtual void applicationWillFinishLaunching( NS::Notification* pNotification ) override;
-    virtual void applicationDidFinishLaunching( NS::Notification* pNotification ) override;
-    virtual bool applicationShouldTerminateAfterLastWindowClosed( NS::Application* pSender ) override;
+    void applicationWillFinishLaunching(NS::Notification* notification) override;
+    void applicationDidFinishLaunching(NS::Notification* notification) override;
+    bool applicationShouldTerminateAfterLastWindowClosed(
+        NS::Application* sender) override;
 
 private:
-    NS::Window* _pWindow;
-    MTK::View* _pMtkView;
-    MTL::Device* _pDevice;
-    MyMTKViewDelegate* _pViewDelegate = nullptr;
+    NS::Window* window;
+    MTK::View* mtkView;
+    MTL::Device* device;
+
+    std::unique_ptr<MyMTKViewDelegate> delegate;
 };

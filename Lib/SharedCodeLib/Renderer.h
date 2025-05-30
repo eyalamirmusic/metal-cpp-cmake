@@ -7,9 +7,9 @@ class Renderer
 public:
     Renderer(MTL::Device* pDevice);
     ~Renderer();
-    void draw(MTK::View* pView);
+    void draw(const MTK::View* view) const;
 
 private:
-    MTL::Device* _pDevice;
-    MTL::CommandQueue* _pCommandQueue;
+    MTL::Device* device;
+    MTL::CommandQueue* commandQueue;
 };

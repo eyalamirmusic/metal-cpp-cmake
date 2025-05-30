@@ -1,27 +1,28 @@
 #include "Renderer.h"
 
 Renderer::Renderer(MTL::Device* pDevice)
-    : _pDevice(pDevice->retain())
+    : device(pDevice->retain())
 {
-    _pCommandQueue = _pDevice->newCommandQueue();
+    commandQueue = device->newCommandQueue();
 }
 
 Renderer::~Renderer()
 {
-    _pCommandQueue->release();
-    _pDevice->release();
+    commandQueue->release();
+    device->release();
 }
 
-void Renderer::draw(MTK::View* pView)
+void Renderer::draw(const MTK::View* view) const
 {
-    NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
+    auto pool = NS::AutoreleasePool::alloc()->init();
 
-    MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
-    MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
-    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder(pRpd);
-    pEnc->endEncoding();
-    pCmd->presentDrawable(pView->currentDrawable());
-    pCmd->commit();
+    auto cmd = commandQueue->commandBuffer();
+    auto rpd = view->currentRenderPassDescriptor();
+    auto enc = cmd->renderCommandEncoder(rpd);
 
-    pPool->release();
+    enc->endEncoding();
+    cmd->presentDrawable(view->currentDrawable());
+    cmd->commit();
+
+    pool->release();
 }

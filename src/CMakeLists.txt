@@ -5,3 +5,4 @@ function(add_project project)
 endfunction()
 
 add_project(00-window)
+add_project(01-primitive)
