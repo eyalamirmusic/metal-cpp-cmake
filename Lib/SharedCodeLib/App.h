@@ -3,6 +3,7 @@
 #include "ViewDelegate.h"
 #include "Renderer.h"
 #include "AutoReleasePool.h"
+#include "Helpers.h"
 
 namespace Apple
 {
@@ -15,8 +16,6 @@ public:
 
     }
 
-    ~MyAppDelegate() override;
-
     NS::Menu* createMenuBar();
 
     void applicationWillFinishLaunching(NS::Notification* notification) override;
@@ -25,9 +24,9 @@ public:
         NS::Application* sender) override;
 
 private:
-    NS::Window* window = nullptr;
-    MTK::View* mtkView = nullptr;
-    MTL::Device* device = nullptr;
+    NS::SharedPtr<NS::Window> window;
+    NS::SharedPtr<MTK::View> mtkView;
+    NS::SharedPtr<MTL::Device> device;
 
     Renderer& renderer;
     std::unique_ptr<MyMTKViewDelegate> delegate;

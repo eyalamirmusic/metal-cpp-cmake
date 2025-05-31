@@ -6,52 +6,20 @@
 
 struct Renderer : Apple::Renderer
 {
-    ~Renderer() override
-    {
-        vertexPositionsBuffer->release();
-        vertexColorsBuffer->release();
-        pso->release();
-    }
-
     void buildShaders()
     {
-        using NS::StringEncoding::UTF8StringEncoding;
+        auto lib = Apple::createLibrary(device.get(), getShader());
 
-        auto shaderSrc = getShader();
+        auto vertex = Apple::createFunction(lib.get(), "vertexMain");
+        auto fragment = Apple::createFunction(lib.get(), "fragmentMain");
 
-        NS::Error* pError = nullptr;
-        auto* pLibrary = device->newLibrary(
-            NS::String::string(shaderSrc, UTF8StringEncoding), nullptr, &pError);
-
-        if (!pLibrary)
-        {
-            std::cout << pError->localizedDescription()->utf8String() << std::endl;
-            assert(false);
-        }
-
-        auto* pVertexFn = pLibrary->newFunction(
-            NS::String::string("vertexMain", UTF8StringEncoding));
-        auto* pFragFn = pLibrary->newFunction(
-            NS::String::string("fragmentMain", UTF8StringEncoding));
-
-        auto* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
-        pDesc->setVertexFunction(pVertexFn);
-        pDesc->setFragmentFunction(pFragFn);
-        pDesc->colorAttachments()->object(0)->setPixelFormat(
+        auto desc = NS::TransferPtr(MTL::RenderPipelineDescriptor::alloc()->init());
+        desc->setVertexFunction(vertex.get());
+        desc->setFragmentFunction(fragment.get());
+        desc->colorAttachments()->object(0)->setPixelFormat(
             MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
 
-        pso = device->newRenderPipelineState(pDesc, &pError);
-
-        if (!pso)
-        {
-            std::cout << pError->localizedDescription()->utf8String() << std::endl;
-            assert(false);
-        }
-
-        pVertexFn->release();
-        pFragFn->release();
-        pDesc->release();
-        pLibrary->release();
+        pso = Apple::createRenderState(device.get(), desc.get());
     }
 
     void buildBuffers()
@@ -67,13 +35,10 @@ struct Renderer : Apple::Renderer
         const size_t positionsDataSize = NumVertices * sizeof(simd::float3);
         const size_t colorDataSize = NumVertices * sizeof(simd::float3);
 
-        auto* pVertexPositionsBuffer =
-            device->newBuffer(positionsDataSize, MTL::ResourceStorageModeManaged);
-        auto* pVertexColorsBuffer =
-            device->newBuffer(colorDataSize, MTL::ResourceStorageModeManaged);
-
-        vertexPositionsBuffer = pVertexPositionsBuffer;
-        vertexColorsBuffer = pVertexColorsBuffer;
+        vertexPositionsBuffer = NS::TransferPtr(
+            device->newBuffer(positionsDataSize, MTL::ResourceStorageModeManaged));
+        vertexColorsBuffer = NS::TransferPtr(
+            device->newBuffer(colorDataSize, MTL::ResourceStorageModeManaged));
 
         memcpy(vertexPositionsBuffer->contents(), positions, positionsDataSize);
         memcpy(vertexColorsBuffer->contents(), colors, colorDataSize);
@@ -84,18 +49,14 @@ struct Renderer : Apple::Renderer
             NS::Range::Make(0, vertexColorsBuffer->length()));
     }
 
-    void draw(Apple::RenderContext& context) override
+    void draw() override
     {
-        auto enc = context.commandEncoder;
-
-        enc->setRenderPipelineState(pso);
-        enc->setVertexBuffer(vertexPositionsBuffer, 0, 0);
-        enc->setVertexBuffer(vertexColorsBuffer, 0, 1);
-        enc->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle,
-                            NS::UInteger(0),
-                            NS::UInteger(3));
-
-        context.endFrame();
+        commandEncoder->setRenderPipelineState(pso.get());
+        commandEncoder->setVertexBuffer(vertexPositionsBuffer.get(), 0, 0);
+        commandEncoder->setVertexBuffer(vertexColorsBuffer.get(), 0, 1);
+        commandEncoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle,
+                                       NS::UInteger(0),
+                                       NS::UInteger(3));
     }
 
     void deviceChanged() override
@@ -104,9 +65,9 @@ struct Renderer : Apple::Renderer
         buildBuffers();
     }
 
-    MTL::RenderPipelineState* pso {};
-    MTL::Buffer* vertexPositionsBuffer {};
-    MTL::Buffer* vertexColorsBuffer {};
+    NS::SharedPtr<MTL::RenderPipelineState> pso;
+    NS::SharedPtr<MTL::Buffer> vertexPositionsBuffer;
+    NS::SharedPtr<MTL::Buffer> vertexColorsBuffer;
 };
 
 int main()

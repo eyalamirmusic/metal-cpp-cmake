@@ -3,29 +3,35 @@
 
 namespace Apple
 {
-Renderer::~Renderer()
-{
-    commandQueue->release();
-    device->release();
-}
 
-void Renderer::setDevice(MTL::Device* deviceToUse)
+void Renderer::setDevice(NS::SharedPtr<MTL::Device> deviceToUse)
 {
     device = deviceToUse;
-    commandQueue = device->newCommandQueue();
+    commandQueue = NS::TransferPtr(device->newCommandQueue());
+
     deviceChanged();
 }
 
-void Renderer::drawIn(MTK::View* view)
+void Renderer::drawIn(MTK::View* currentView)
 {
     auto pool = AutoReleasePool();
+    commandBuf = {commandQueue->commandBuffer()};
+    view = currentView;
+    renderPassDescriptor = view->currentRenderPassDescriptor();
+    commandEncoder = commandBuf->renderCommandEncoder(renderPassDescriptor);
 
-    auto context = RenderContext(device, commandQueue, view);
-    draw(context);
+    draw();
+    endFrame();
 }
 
-void Renderer::draw(RenderContext& context)
+void Renderer::draw()
 {
-    context.endFrame();
+}
+
+void Renderer::endFrame() const
+{
+    commandEncoder->endEncoding();
+    commandBuf->presentDrawable(view->currentDrawable());
+    commandBuf->commit();
 }
 } // namespace Apple

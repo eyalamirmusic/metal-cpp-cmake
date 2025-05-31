@@ -5,48 +5,23 @@
 namespace Apple
 {
 
-struct RenderContext
+struct Renderer
 {
-    RenderContext(MTL::Device* deviceToUse,
-                  MTL::CommandQueue* queueToUse,
-                  MTK::View* viewToUse)
-        : device(deviceToUse)
-        , commandQueue(queueToUse)
-        , view(viewToUse)
-    {
-    }
+    virtual ~Renderer() = default;
 
-    void endFrame() const
-    {
-        commandEncoder->endEncoding();
-        commandBuf->presentDrawable(view->currentDrawable());
-        commandBuf->commit();
-    }
-
-    MTL::Device* device;
-    MTL::CommandQueue* commandQueue;
-    MTL::CommandBuffer* commandBuf {commandQueue->commandBuffer()};
-    MTK::View* view;
-    MTL::RenderPassDescriptor* renderPassDescriptor {
-        view->currentRenderPassDescriptor()};
-    MTL::RenderCommandEncoder* commandEncoder {
-        commandBuf->renderCommandEncoder(renderPassDescriptor)};
-};
-
-class Renderer
-{
-public:
-    virtual ~Renderer();
-
-    void setDevice(MTL::Device* deviceToUse);
+    void setDevice(NS::SharedPtr<MTL::Device> deviceToUse);
 
     virtual void deviceChanged() {}
-    void drawIn(MTK::View* view);
+    void drawIn(MTK::View* currentView);
+    virtual void draw();
 
-protected:
-    virtual void draw(RenderContext& context);
+    void endFrame() const;
 
-    MTL::Device* device;
-    MTL::CommandQueue* commandQueue;
+    NS::SharedPtr<MTL::Device> device;
+    NS::SharedPtr<MTL::CommandQueue> commandQueue;
+    MTK::View* view;
+    MTL::RenderPassDescriptor* renderPassDescriptor;
+    MTL::CommandBuffer* commandBuf;
+    MTL::RenderCommandEncoder* commandEncoder;
 };
 } // namespace Apple
