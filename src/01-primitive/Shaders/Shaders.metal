@@ -7,14 +7,20 @@ struct v2f
     half3 color;
 };
 
-v2f vertex vertexMain( uint vertexId [[vertex_id]],
-                       device const float3* positions [[buffer(0)]],
-                       device const float3* colors [[buffer(1)]] )
+struct Uniforms {
+    float4x4 modelMatrix;
+};
+
+vertex v2f vertexMain(uint vertexID [[vertex_id]],
+                      const device float3* positions [[buffer(0)]],
+                      const device float3* colors [[buffer(1)]],
+                      constant Uniforms& uniforms [[buffer(2)]])
 {
-    v2f o;
-    o.position = float4( positions[ vertexId ], 1.0 );
-    o.color = half3 ( colors[ vertexId ] );
-    return o;
+    v2f out;
+    float4 pos = float4(positions[vertexID], 1.0);
+    out.position = uniforms.modelMatrix * pos;
+    out.color = half3(colors[vertexID]); // Explicit conversion to half3
+    return out;
 }
 
 half4 fragment fragmentMain( v2f in [[stage_in]] )

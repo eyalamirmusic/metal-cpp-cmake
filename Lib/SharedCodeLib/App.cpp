@@ -83,7 +83,7 @@ void MyAppDelegate::applicationDidFinishLaunching(NS::Notification* notification
 
     mtkView = NS::TransferPtr(MTK::View::alloc()->init(frame, device.get()));
     mtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
-    mtkView->setClearColor(MTL::ClearColor::Make(1.0, 0.0, 0.0, 1.0));
+    mtkView->setClearColor(MTL::ClearColor::Make(0.0, 0.0, 0.0, 0.0));
 
     delegate = std::make_unique<MyMTKViewDelegate>(renderer);
     mtkView->setDelegate(delegate.get());
