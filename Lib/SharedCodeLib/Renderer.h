@@ -20,7 +20,7 @@ struct Renderer
     NS::SharedPtr<MTL::Device> device;
     NS::SharedPtr<MTL::CommandQueue> commandQueue;
     MTK::View* view;
-    MTL::RenderPassDescriptor* renderPassDescriptor;
+    MTL::RenderPassDescriptor* passDescriptor;
     MTL::CommandBuffer* commandBuf;
     MTL::RenderCommandEncoder* commandEncoder;
 };

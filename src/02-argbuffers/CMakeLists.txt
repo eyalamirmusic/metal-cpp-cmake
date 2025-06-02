@@ -1,0 +1,3 @@
+add_executable(02-argbuffers 02-argbuffers.cpp)
+cmrc_add_resource_library(argbuffershaders Shaders/Shaders.metal)
+target_link_libraries(02-argbuffers PRIVATE SharedCodeLib argbuffershaders)

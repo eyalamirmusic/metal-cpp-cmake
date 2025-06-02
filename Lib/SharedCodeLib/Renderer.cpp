@@ -17,8 +17,8 @@ void Renderer::drawIn(MTK::View* currentView)
     auto pool = AutoReleasePool();
     commandBuf = {commandQueue->commandBuffer()};
     view = currentView;
-    renderPassDescriptor = view->currentRenderPassDescriptor();
-    commandEncoder = commandBuf->renderCommandEncoder(renderPassDescriptor);
+    passDescriptor = view->currentRenderPassDescriptor();
+    commandEncoder = commandBuf->renderCommandEncoder(passDescriptor);
 
     draw();
     endFrame();
