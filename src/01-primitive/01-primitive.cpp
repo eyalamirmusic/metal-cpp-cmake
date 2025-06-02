@@ -24,24 +24,6 @@ NS::SharedPtr<MTL::Buffer> createBufferFrom(MTL::Device* device,
     return buf;
 }
 
-glm::mat4 makeCenteredZRotation(float angle, const glm::vec3& center)
-{
-    glm::mat4 translateToOrigin = glm::translate(glm::mat4(1.0f), -center);
-    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1));
-    glm::mat4 translateBack = glm::translate(glm::mat4(1.0f), center);
-    return translateBack * rotate * translateToOrigin;
-}
-
-glm::vec3 computeTriangleCentroid(const Vertices& positions)
-{
-    auto sum = glm::vec3(0.f);
-
-    for (auto& pos: positions)
-        sum += pos;
-
-    return sum / static_cast<float>(positions.size());
-}
-
 static float getCurrentTimeInRadians()
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
@@ -83,15 +65,13 @@ struct Renderer : Apple::Renderer
     void buildBuffers()
     {
         auto positions =
-            Vertices {{-0.8f, 0.8f, 0.0f}, {0.0f, -0.8f, 0.0f}, {+0.8f, 0.8f, 0.0f}};
+            Vertices {{-0.6f, 0.6f, 0.0f}, {0.0f, -0.6f, 0.0f}, {+0.6f, 0.6f, 0.0f}};
 
         auto colors =
             Vertices {{1.0, 0.3f, 0.2f}, {0.8f, 1.0, 0.0f}, {0.8f, 0.0f, 1.0}};
 
-        center = computeTriangleCentroid(positions);
-
         vertexPositions = createBufferFrom(device.get(), positions);
-        vertexColors = createBufferFrom(device.get(), positions);
+        vertexColors = createBufferFrom(device.get(), colors);
         uniformBuffer = createNewBuffer(device.get(), sizeof(Uniforms));
     }
 
@@ -100,7 +80,8 @@ struct Renderer : Apple::Renderer
         auto angle = getCurrentTimeInRadians(); // You define how angle is updated
 
         auto* uniforms = static_cast<Uniforms*>(uniformBuffer->contents());
-        uniforms->modelMatrix = makeCenteredZRotation(angle, center);
+        uniforms->modelMatrix =
+            glm::rotate(glm::mat4(1.f), angle, glm::vec3(0, 0, 1));
         uniformBuffer->didModifyRange(NS::Range::Make(0, sizeof(Uniforms)));
 
         commandEncoder->setRenderPipelineState(pso.get());
@@ -112,8 +93,6 @@ struct Renderer : Apple::Renderer
                                        NS::UInteger(0),
                                        NS::UInteger(3));
     }
-
-    glm::vec3 center {};
 
     NS::SharedPtr<MTL::RenderPipelineState> pso;
     NS::SharedPtr<MTL::Buffer> vertexPositions;
