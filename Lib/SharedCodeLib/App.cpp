@@ -106,8 +106,8 @@ bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed(
 
 void startAppWith(Renderer& renderer)
 {
-    auto releasePool = Apple::AutoReleasePool();
-    auto del = Apple::MyAppDelegate(renderer);
+    auto releasePool = AutoReleasePool();
+    auto del = MyAppDelegate(renderer);
 
     auto* app = NS::Application::sharedApplication();
     app->setDelegate(&del);

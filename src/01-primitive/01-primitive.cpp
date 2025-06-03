@@ -1,29 +1,6 @@
 #include <SharedCodeLib/Lib.h>
 #include "Shader.h"
 
-using Vertices = std::vector<glm::vec3>;
-
-inline size_t getSize(const Vertices& vertices)
-{
-    return sizeof(glm::vec3) * vertices.size();
-}
-
-NS::SharedPtr<MTL::Buffer> createNewBuffer(MTL::Device* device, size_t size)
-{
-    return NS::TransferPtr(device->newBuffer(size, MTL::ResourceStorageModeManaged));
-}
-
-NS::SharedPtr<MTL::Buffer> createBufferFrom(MTL::Device* device,
-                                            const Vertices& vertices)
-{
-    auto size = getSize(vertices);
-    auto buf = createNewBuffer(device, size);
-    memcpy(buf->contents(), vertices.data(), size);
-    buf->didModifyRange(NS::Range::Make(0, buf->length()));
-
-    return buf;
-}
-
 static float getCurrentTimeInRadians()
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
@@ -64,6 +41,8 @@ struct Renderer : Apple::Renderer
 
     void buildBuffers()
     {
+        using namespace Graphics;
+
         auto positions =
             Vertices {{-0.6f, 0.6f, 0.0f}, {0.0f, -0.6f, 0.0f}, {+0.6f, 0.6f, 0.0f}};
 
