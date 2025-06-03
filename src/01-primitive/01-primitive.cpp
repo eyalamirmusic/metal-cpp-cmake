@@ -3,17 +3,25 @@
 
 static float getCurrentTimeInRadians()
 {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto now = std::chrono::high_resolution_clock::now();
+    using Clock = std::chrono::high_resolution_clock;
+
+    static auto startTime = Clock::now();
+    auto now = Clock::now();
     auto seconds = std::chrono::duration<float>(now - startTime).count();
 
-    return seconds; // 1 rad/sec rotation speed
+    return seconds;
 }
 
 struct Uniforms
 {
     glm::mat4x4 modelMatrix;
 };
+
+glm::mat4x4 getRotation()
+{
+    auto angle = getCurrentTimeInRadians();
+    return glm::rotate(glm::mat4(1.f), angle, glm::vec3(0, 0, 1));
+}
 
 struct Renderer : Apple::Renderer
 {
@@ -51,22 +59,18 @@ struct Renderer : Apple::Renderer
 
         vertexPositions = createBufferFrom(device.get(), positions);
         vertexColors = createBufferFrom(device.get(), colors);
-        uniformBuffer = createNewBuffer(device.get(), sizeof(Uniforms));
+        uniformBuffer.create(device.get());
     }
 
     void draw() override
     {
-        auto angle = getCurrentTimeInRadians(); // You define how angle is updated
-
-        auto* uniforms = static_cast<Uniforms*>(uniformBuffer->contents());
-        uniforms->modelMatrix =
-            glm::rotate(glm::mat4(1.f), angle, glm::vec3(0, 0, 1));
-        uniformBuffer->didModifyRange(NS::Range::Make(0, sizeof(Uniforms)));
+        uniformBuffer->modelMatrix = getRotation();
+        uniformBuffer.update();
 
         commandEncoder->setRenderPipelineState(pso.get());
         commandEncoder->setVertexBuffer(vertexPositions.get(), 0, 0);
         commandEncoder->setVertexBuffer(vertexColors.get(), 0, 1);
-        commandEncoder->setVertexBuffer(uniformBuffer.get(), 0, 2); // New
+        commandEncoder->setVertexBuffer(uniformBuffer.getBuffer(), 0, 2);
 
         commandEncoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle,
                                        NS::UInteger(0),
@@ -76,7 +80,7 @@ struct Renderer : Apple::Renderer
     NS::SharedPtr<MTL::RenderPipelineState> pso;
     NS::SharedPtr<MTL::Buffer> vertexPositions;
     NS::SharedPtr<MTL::Buffer> vertexColors;
-    NS::SharedPtr<MTL::Buffer> uniformBuffer;
+    Graphics::BufferOwner<Uniforms> uniformBuffer;
 };
 
 int main()
