@@ -17,6 +17,19 @@ struct Uniforms
     glm::mat4x4 modelMatrix;
 };
 
+glm::mat4x4 getMVP()
+{
+    auto aspect = 1.0f; // Assuming square viewport; replace with actual width/height
+    auto scale = 1.0f / 100.0f; // Scale down large models
+
+    glm::mat4 proj = glm::ortho(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
+    glm::mat4 model =
+        glm::rotate(glm::mat4(1.f), getCurrentTimeInRadians(), glm::vec3(0, 0, 1));
+    glm::mat4 view = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+
+    return proj * view * model;
+}
+
 glm::mat4x4 getRotation()
 {
     auto angle = getCurrentTimeInRadians();
@@ -51,20 +64,16 @@ struct Renderer : Apple::Renderer
     {
         using namespace Graphics;
 
-        auto positions =
-            Vertices {{-0.6f, 0.6f, 0.0f}, {0.0f, -0.6f, 0.0f}, {+0.6f, 0.6f, 0.0f}};
+        model = loadModelFromObjData(getObj(), getMaterial());
 
-        auto colors =
-            Vertices {{1.0, 0.3f, 0.2f}, {0.8f, 1.0, 0.0f}, {0.8f, 0.0f, 1.0}};
-
-        vertexPositions = createBufferFrom(device.get(), positions);
-        vertexColors = createBufferFrom(device.get(), colors);
+        vertexPositions = createBufferFrom(device.get(), model.positions);
+        vertexColors = createBufferFrom(device.get(), model.colors);
         uniformBuffer.create(device.get());
     }
 
     void draw() override
     {
-        uniformBuffer->modelMatrix = getRotation();
+        uniformBuffer->modelMatrix = getMVP();
         uniformBuffer.update();
 
         commandEncoder->setRenderPipelineState(pso.get());
@@ -74,13 +83,14 @@ struct Renderer : Apple::Renderer
 
         commandEncoder->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle,
                                        NS::UInteger(0),
-                                       NS::UInteger(3));
+                                       NS::UInteger(model.positions.size()));
     }
 
     NS::SharedPtr<MTL::RenderPipelineState> pso;
     NS::SharedPtr<MTL::Buffer> vertexPositions;
     NS::SharedPtr<MTL::Buffer> vertexColors;
     Graphics::BufferOwner<Uniforms> uniformBuffer;
+    Graphics::Model model;
 };
 
 int main()
