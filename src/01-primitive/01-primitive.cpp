@@ -17,24 +17,28 @@ struct Uniforms
     glm::mat4x4 modelMatrix;
 };
 
-glm::mat4x4 getMVP()
-{
-    auto aspect = 1.0f; // Assuming square viewport; replace with actual width/height
-    auto scale = 1.0f / 100.0f; // Scale down large models
-
-    glm::mat4 proj = glm::ortho(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
-    glm::mat4 model =
-        glm::rotate(glm::mat4(1.f), getCurrentTimeInRadians(), glm::vec3(0, 0, 1));
-    glm::mat4 view = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-
-    return proj * view * model;
-}
-
 glm::mat4x4 getRotation()
 {
     auto angle = getCurrentTimeInRadians();
-    return glm::rotate(glm::mat4(1.f), angle, glm::vec3(0, 0, 1));
+
+    auto rotZ = glm::rotate(glm::mat4(1.f), angle, glm::vec3(0, 0, 1));
+    auto rotX = glm::rotate(glm::mat4(1.f), angle * 0.5f, glm::vec3(1, 0, 0)); // slower X rotation
+
+    return rotZ * rotX;
 }
+
+glm::mat4x4 getMVP()
+{
+    auto aspect = 1.0f;
+    auto scale = 0.5f;
+
+    auto proj = glm::ortho(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
+    auto model = getRotation();
+
+
+    return proj * model;
+}
+
 
 struct Renderer : Apple::Renderer
 {

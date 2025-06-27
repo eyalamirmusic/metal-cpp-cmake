@@ -31,7 +31,7 @@ Model loadModelFromObjData(const std::string& objData, const std::string& mtlDat
 
         for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
         {
-            int fv = shape.mesh.num_face_vertices[f];
+            int fv = (int)shape.mesh.num_face_vertices[f];
             int materialID = shape.mesh.material_ids[f];
 
             // Default color (white)
